@@ -1,4 +1,4 @@
 .env/
 playground/
-experiments/
-data/
+nn_generalizability/experiments/
+nn_generalizability/data/
