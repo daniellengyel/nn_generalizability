@@ -86,7 +86,7 @@ else:
 
 # --- Set up folder in which to store all results ---
 folder_name = get_file_stamp()
-cwd = os.environ["PATH_TO_GG_FOLDER"]
+cwd = os.environ["PATH_TO_GEN_FOLDER"]
 folder_path = os.path.join(cwd, "experiments", data_name, folder_name)
 print(folder_path)
 os.makedirs(folder_path)

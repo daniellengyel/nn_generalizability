@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 import os
 
 
-PATH_TO_DATA = "{}/data".format(os.environ["PATH_TO_FLAT_FOLDER"])
+PATH_TO_DATA = "{}/data".format(os.environ["PATH_TO_GEN_FOLDER"])
 
 def get_data(data_name, vectorized=False, reduce_train_per=None):
     if data_name == "gaussian":

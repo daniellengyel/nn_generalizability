@@ -216,7 +216,7 @@ def get_stuff(experiment_folder):
 def main(experiment_name):
     # # # save analysis processsing
 
-    root_folder = os.environ["PATH_TO_GG_FOLDER"]
+    root_folder = os.environ["PATH_TO_GEN_FOLDER"]
     data_name = "CIFAR10"
     exp = "Jul13_16-26-18_Daniels-MacBook-Pro-4.local"
     experiment_folder = os.path.join(root_folder, "experiments", data_name, exp)

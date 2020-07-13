@@ -21,7 +21,7 @@ from .postprocessing import *
 
 
 if __name__ == "__main__":
-    root_folder = os.environ["PATH_TO_FLAT_FOLDER"]
+    root_folder = os.environ["PATH_TO_GEN_FOLDER"]
     data_name = "CIFAR10"
     exp = "SimpleNet_two_bs"
     experiment_folder = os.path.join(root_folder, "experiments", data_name, exp)
