@@ -50,10 +50,10 @@ elif config["net_name"] == "LeNet":
 
 config["seed"] = 0
 
-config["num_steps"] = 300  # tune.grid_search([25000]) # roughly 50 * 500 / 16
+config["num_steps"] = 50000  # tune.grid_search([25000]) # roughly 50 * 500 / 16
 config["mean_loss_threshold"] = None # 0.15
 
-config["batch_train_size"] = 32 # tune.grid_search([32, 256, 4096])
+config["batch_train_size"] = tune.grid_search([32, 256, 4096])
 config["batch_test_size"] = 16 # tune.grid_search([16])
 
 config["var_noise"] = None # tune.grid_search(list(np.logspace(-4, -1, 5)))
@@ -75,7 +75,7 @@ config["softmax_beta"] = 0 # tune.grid_search([-50, 50]) #tune.grid_search([0] +
 config["softmax_adaptive"] = None  # [offset, 1000] # offset, and strength
 
 
-config["device"] = "cpu"
+config["device"] = "gpu"
 
 config["hard_train_eps"] = None #  0.1
 
@@ -93,11 +93,7 @@ os.makedirs(folder_path)
 
 # --- get data ---
 train_data, test_data = get_data(data_name, vectorized=config["net_name"] == "SimpleNet",
-                                 reduce_train_per=config["reduce_train_per"])
-if (data_name == "gaussian") or (data_name == "mis_gauss"):
-    # Store the data in our folder as data.pkl
-    with open(os.path.join(folder_path, "data.pkl"), "wb") as f:
-        pickle.dump((train_data, test_data), f)
+                                 reduce_train_per=config["reduce_train_per"], seed=config["seed"])
 
 a = time.time()
 # train(config, folder_path, train_data, test_data)

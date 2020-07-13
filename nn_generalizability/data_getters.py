@@ -4,16 +4,18 @@ from torch.utils.data import Dataset, DataLoader
 import torchvision
 import torchvision.transforms as transforms
 
-import os
+import os, pickle
+
+from .save_load import *
 
 
 PATH_TO_DATA = "{}/data".format(os.environ["PATH_TO_GEN_FOLDER"])
 
-def get_data(data_name, vectorized=False, reduce_train_per=None):
+def get_data(data_name, vectorized=False, reduce_train_per=None, seed=0):
     if data_name == "gaussian":
-        train_data, test_data = _get_gaussian()
+        train_data, test_data = _get_gaussian(seed=seed)
     elif data_name == "mis_gauss":
-        train_data, test_data = _get_mis_gauss()
+        train_data, test_data = _get_mis_gauss(seed=seed)
     elif data_name == "MNIST":
         train_data, test_data = _get_MNIST()
     elif data_name == "CIFAR10":
@@ -23,10 +25,17 @@ def get_data(data_name, vectorized=False, reduce_train_per=None):
     else:
         raise NotImplementedError("{} is not implemented.".format(data_name))
     if reduce_train_per is not None:
-        train_data = ReducedData(train_data, reduce_train_per)
+        train_data = ReducedData(train_data, reduce_train_per, seed=seed)
     if vectorized:
         train_data, test_data = VectorizedWrapper(train_data), VectorizedWrapper(test_data)
     return train_data, test_data
+
+
+def get_random_data_subset(data, num_datapoints=1, seed=0):
+    set_seed(seed)
+    data_loader = DataLoader(data, batch_size=num_datapoints, shuffle=True)
+    return next(iter(data_loader))
+
 
 def _get_MNIST():
     train_data = torchvision.datasets.MNIST(os.path.join(PATH_TO_DATA, "MNIST"), train=True,
@@ -83,7 +92,8 @@ def _get_CIFAR10():
 
     return train_data, test_data
 
-def _get_gaussian():
+def _get_gaussian(seed=0):
+    set_seed(seed)
     # get data
     gaussian_params = []
 
@@ -103,7 +113,8 @@ def _get_gaussian():
 
     return train_gaussian, test_gaussian
 
-def _get_mis_gauss():
+def _get_mis_gauss(seed=0):
+    set_seed = seed
     # get data
     gaussian_params = []
 
@@ -135,6 +146,7 @@ class GaussianMixture(Dataset):
     """
 
     def __init__(self, means, covs, nums):
+
         self.data = []
         self.targets = []
 
@@ -235,8 +247,8 @@ class VectorizedWrapper():
         return len(self.data)
 
 class ReducedData:
-    def __init__(self, data, per):
-        np.random.seed(1)
+    def __init__(self, data, per, seed=0):
+        set_seed(seed)
         self.num_data = len(data)
         self.per = per
         self.idxs = np.random.choice(list(range(self.num_data)), int(self.num_data * self.per))

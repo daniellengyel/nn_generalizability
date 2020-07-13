@@ -8,16 +8,14 @@ import torch
 from torch.utils.data import DataLoader
 import sys
 
-sys.path.append("..")
-from nets import Nets
-from utils import *
-
 import re
 
-from postprocessing import *
+from .postprocessing import *
 from .training_metrics import * 
 from .lineages import *
 from .utils import * 
+from ..nets import Nets
+from ..utils import *
 
 import itertools
 

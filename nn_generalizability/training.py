@@ -37,7 +37,7 @@ def train(config, folder_path, train_data, test_data):
     test_loader = DataLoader(test_data, batch_size=config["batch_test_size"], shuffle=True)
 
     # Init neural nets and weights
-    nets = get_nets(config["net_name"], config["net_params"], config["num_nets"], device=None)
+    nets = get_nets(config["net_name"], config["net_params"], config["num_nets"], device=device)
 
     num_nets = config["num_nets"]
     nets_weights = np.zeros(num_nets)
@@ -104,20 +104,20 @@ def train(config, folder_path, train_data, test_data):
             covs = get_params_cov(nets)
             writer.add_scalar('WeightVarTrace/', torch.norm(covs), curr_step)
 
-            # Check resample. TODO move this in the should resample or something.
-            if sampling_wait == curr_step:
-                nets_weights = np.zeros(num_nets)
+            # # Check resample. TODO move this in the should resample or something.
+            # if sampling_wait == curr_step:
+            #     nets_weights = np.zeros(num_nets)
 
-            if should_resample_checker(nets_weights, curr_step):
-                nets, nets_weights, optimizers, is_training_curr = do_resampling_TMP(nets, optimizers, get_opt_func, beta, nets_weights, softmax_adaptive, curr_step, folder_path, file_stamp, mean_loss)
+            # if should_resample_checker(nets_weights, curr_step):
+            #     nets, nets_weights, optimizers, is_training_curr = do_resampling_TMP(nets, optimizers, get_opt_func, beta, nets_weights, softmax_adaptive, curr_step, folder_path, file_stamp, mean_loss)
 
             # update curr_step
             curr_step += steps_taken
 
-        # get test error
-        for idx_net in range(num_nets):
-            accuracy = get_net_accuracy(nets[idx_net], test_loader, device=device)
-            writer.add_scalar('Accuracy/net_{}'.format(idx_net), accuracy, curr_step)
+        # # get test error
+        # for idx_net in range(num_nets):
+        #     accuracy = get_net_accuracy(nets[idx_net], test_loader, device=device)
+        #     writer.add_scalar('Accuracy/net_{}'.format(idx_net), accuracy, curr_step)
 
     # save final nets
     save_models(nets, config["net_name"], config["net_params"], folder_path, file_stamp, step=curr_step)
@@ -176,6 +176,7 @@ def training_step(nets, nets_weights, net_optimizers, net_data_loaders, criterio
             taking_step = False
             break
         inputs, labels = data
+
         if device is not None:
             inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
                 torch.cuda.LongTensor)
@@ -223,12 +224,12 @@ def training_step(nets, nets_weights, net_optimizers, net_data_loaders, criterio
             writer.add_scalar('Loss/train/net_{}'.format(idx_net), loss, curr_step)
             writer.add_scalar('Gradient/train/net_{}'.format(idx_net), curr_weight, curr_step)
             writer.add_scalar('Norm/net_{}'.format(idx_net), torch.norm(get_params_vec(net)), curr_step)
-            if (curr_step % 50) == 0:
-                # a = time.time()
-                is_gpu = device is not None
-                trace = np.mean(hessian(net, criterion, data=(inputs, labels), cuda=is_gpu).trace())
-                writer.add_scalar('Trace/net_{}'.format(idx_net), trace, curr_step)
-                # print("Getting trace took {}".format(time.time() - a))
+            # if (curr_step % 50) == 0:
+            #     # a = time.time()
+            #     is_gpu = device is not None
+            #     trace = np.mean(hessian(net, criterion, data=(inputs, labels), cuda=is_gpu).trace())
+            #     writer.add_scalar('Trace/net_{}'.format(idx_net), trace, curr_step)
+            #     # print("Getting trace took {}".format(time.time() - a))
 
         mean_loss += float(loss)
 

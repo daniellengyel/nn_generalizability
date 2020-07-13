@@ -58,7 +58,7 @@ def get_all_models(experiment_folder, step):
     return models_dict
 
 def cache_data(experiment_folder, name, data, meta_dict=None):
-    cache_folder = os.path.join(experiment_folder, "postprocessing", "name")
+    cache_folder = os.path.join(experiment_folder, "postprocessing", name)
     if not os.path.exists(cache_folder):
         os.makedirs(cache_folder)
     with open(os.path.join(cache_folder, "data.pkl"), "wb") as f:
@@ -67,6 +67,39 @@ def cache_data(experiment_folder, name, data, meta_dict=None):
     if meta_dict is not None:
         with open(os.path.join(cache_folder, "meta.yml"), "wb") as f:
             yaml.dump(meta_dict, f)
+
+# def load_cached_data(experiment_folder):
+#     stuff = {}
+
+#     stuff_to_try = ["tsne", "runs", "trace", "acc", "dist", "loss", "grad", "eig"]
+
+#     for singular_stuff in stuff_to_try:
+#         print("Getting {}.".format(singular_stuff))
+#         try:
+#             with open(os.path.join(experiment_folder, "postprocessing/{}/data.pkl".format(singular_stuff)), "rb") as f:
+#                 stuff[singular_stuff] = pickle.load(f)
+#         except:
+#             print("Error: {} could not be found".format(singular_stuff))
+    
+#     return stuff
+
+def load_cached_data(experiment_folder, name):
+    """Available names: ["tsne", "runs", "trace", "acc", "dist", "loss", "grad", "eig"]"""
+    cached_data_path = os.path.join(experiment_folder, "postprocessing", name, "data.pkl")
+    if os.path.isfile(cached_data_path):
+        with open(cached_data_path, "rb") as f:
+            cached_data = pickle.load(f)
+    else:
+        cached_data =  None
+    
+    cached_meta_path = os.path.join(experiment_folder, "postprocessing", name, "meta.yaml")
+    if os.path.isfile(cached_meta_path):
+        with open(cached_meta_path, "rb") as f:
+            cached_meta_data = yaml.load(f)
+    else:
+        cached_meta_data  = None
+
+    return cached_data, cached_meta_data
 
 def exp_models_path_generator(experiment_folder):
     for curr_dir in os.listdir("{}/models".format(experiment_folder)):
@@ -106,3 +139,19 @@ def load_model(PATH, device=None):
     model = get_nets(meta_data["model_name"], meta_data["model_params"], num_nets=1, device=device)[0]
     model.load_state_dict(meta_data['model_state_dict'])
     return model
+
+def load_configs(experiment_folder):
+    config_dir = {}
+    for root, dirs, files in os.walk("{}/runs".format(experiment_folder), topdown=False):
+        if len(files) != 2:
+            continue
+        curr_dir = os.path.basename(root)
+        with open(os.path.join(root, "config.yml"), "rb") as f:
+            config = yaml.load(f)
+        config_dir[curr_dir] = config
+        config_dir[curr_dir]["net_params"] = tuple(config_dir[curr_dir]["net_params"])
+        if ("softmax_adaptive" in config_dir[curr_dir]) and (
+        isinstance(config_dir[curr_dir]["softmax_adaptive"], list)):
+            config_dir[curr_dir]["softmax_adaptive"] = tuple(config_dir[curr_dir]["softmax_adaptive"])
+
+    return pd.DataFrame(config_dir).T

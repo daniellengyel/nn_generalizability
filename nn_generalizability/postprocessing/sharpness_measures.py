@@ -20,14 +20,14 @@ from hessian_eigenthings import compute_hessian_eigenthings
 import pickle
 
 
-# TODO fix this to be clear that we are taking traces for all datapoints.
-def get_traces(net, data, device=None):
+def get_point_traces(net, data, device=None):
     criterion = torch.nn.CrossEntropyLoss()
     traces = []
     if device is not None:
         is_gpu = True
     else:
         is_gpu = False
+        
     for i in range(len(data[0])):
         inputs, labels = data[0][i], data[1][i]
         inputs, labels = inputs.view(1, *inputs.shape), labels.view(1, *labels.shape)

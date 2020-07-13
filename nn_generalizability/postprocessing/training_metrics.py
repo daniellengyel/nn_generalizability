@@ -2,11 +2,10 @@ import numpy as np
 import pandas as pd
 import sys
 
-sys.path.append("..")
-from utils import *
 
 import re
 
+from .utils import *
 from .lineages import *
 
 import itertools

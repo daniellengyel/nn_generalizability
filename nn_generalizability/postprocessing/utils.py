@@ -10,21 +10,6 @@ from ..data_getters import *
 
 import pickle
 
-def get_postprocessing_data(experiment_folder, vectorized=True):
-    data_type = experiment_folder.split("/")[-2]
-    if data_type == "MNIST":
-        return get_data("MNIST", vectorized, reduce_train_per=0.1)
-    if data_type == "FashionMNIST":
-        return get_data("FashionMNIST", vectorized)
-    if data_type == "CIFAR10":
-        return get_data("CIFAR10", vectorized, reduce_train_per=0.1)
-    elif (data_type == "gaussian") or (data_type == "mis_gauss"):
-        with open(os.path.join(experiment_folder, "data.pkl"), "rb") as f:
-            data = pickle.load(f)
-        return data
-    else:
-        raise NotImplementedError("{} data type is not implemented.".format(data_type))
-
 
 def different_cols(df):
     a = df.to_numpy()  # df.values (pandas<0.24)
