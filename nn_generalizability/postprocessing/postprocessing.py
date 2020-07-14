@@ -207,7 +207,7 @@ def get_exp_point_traces(experiment_folder, step, seed, device, num_datapoints=1
     for exp_name, curr_path in exp_models_path_generator(experiment_folder):
 
         models_dict = get_models(curr_path, step)
-        trace_dict[exp_name] = get_models_trace(models_dict, data, criterion, full_dataset=True, verbose=True,
+        trace_dict[exp_name] = get_point_traces(models_dict, data, criterion, full_dataset=True, verbose=True,
                                                 device=device)
 
         # cache data
