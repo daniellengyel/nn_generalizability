@@ -190,9 +190,8 @@ def get_exp_trace(experiment_folder, step, seed=0, FCN=False, device=None):
     return trace_dict
 
 def get_exp_point_traces(experiment_folder, step, seed, device, num_datapoints=1000, on_test_set=False,):
-    trace_dict = {}
+    traces_dict = {}
     meta_dict = {"seed": seed}
-    criterion = torch.nn.CrossEntropyLoss()
 
     # get data
     train_data, test_data = get_data_from_experiment(experiment_folder)
@@ -207,13 +206,12 @@ def get_exp_point_traces(experiment_folder, step, seed, device, num_datapoints=1
     for exp_name, curr_path in exp_models_path_generator(experiment_folder):
 
         models_dict = get_models(curr_path, step)
-        trace_dict[exp_name] = get_point_traces(models_dict, data, criterion, full_dataset=True, verbose=True,
-                                                device=device)
+        traces_dict[exp_name] = get_point_traces(models_dict, data, device=None)
 
         # cache data
-        cache_data(experiment_folder, "point_traces", trace_dict, meta_dict)
+        cache_data(experiment_folder, "point_traces", traces_dict, meta_dict)
 
-    return trace_dict
+    return traces_dict
 
 
 
