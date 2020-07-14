@@ -20,23 +20,26 @@ from hessian_eigenthings import compute_hessian_eigenthings
 import pickle
 
 
-def get_point_traces(net, data, device=None):
+def get_point_traces(models, data, device=None):
     criterion = torch.nn.CrossEntropyLoss()
-    traces = []
+    traces = {}
     if device is not None:
         is_gpu = True
     else:
         is_gpu = False
-        
-    for i in range(len(data[0])):
-        inputs, labels = data[0][i], data[1][i]
-        inputs, labels = inputs.view(1, *inputs.shape), labels.view(1, *labels.shape)
 
-        if device is not None:
-            inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
-                torch.cuda.LongTensor)
+    for k, m in models.items():
+        curr_traces = []
+        for i in range(len(data[0])):
+            inputs, labels = data[0][i], data[1][i]
+            inputs, labels = inputs.view(1, *inputs.shape), labels.view(1, *labels.shape)
 
-        traces.append(np.mean(hessian(net, criterion, data=(inputs, labels), cuda=is_gpu).trace()))
+            if device is not None:
+                inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
+                    torch.cuda.LongTensor)
+
+            curr_traces.append(np.mean(hessian(m, criterion, data=(inputs, labels), cuda=is_gpu).trace()))
+        traces[k] = curr_traces
     return traces
 
 

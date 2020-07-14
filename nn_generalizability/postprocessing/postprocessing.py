@@ -165,7 +165,7 @@ def get_exp_eig(experiment_folder, step, num_eigenthings=5, FCN=False, device=No
     return eigenvalue_dict
 
 
-def get_exp_trace(experiment_folder, step, seed=0, use_gpu=False, FCN=False, device=None):
+def get_exp_trace(experiment_folder, step, seed=0, FCN=False, device=None):
     # init
     trace_dict = {}
     meta_dict = {"seed": seed}
@@ -223,11 +223,11 @@ def main(experiment_name):
 
     root_folder = os.environ["PATH_TO_GEN_FOLDER"]
     data_name = "CIFAR10"
-    exp = "SimpleNet_two_bs"
+    exp = "Jul14_13-44-18_cloud-vm-40-190.doc.ic.ac.uk"
     experiment_folder = os.path.join(root_folder, "experiments", data_name, exp)
 
     # init torch
-    is_gpu = False
+    is_gpu = True
     if is_gpu:
         torch.backends.cudnn.enabled = True
         device = torch.device("cuda:0")
@@ -244,9 +244,9 @@ def main(experiment_name):
     # get_exp_final_distances(experiment_folder, device=device)
 
     # get_exp_eig(experiment_folder, -1, num_eigenthings=5, FCN=True, device=device)
-    # get_exp_trace(experiment_folder, -1, False, FCN=True, device=device)
+    get_exp_trace(experiment_folder, -1, FCN=True, device=device)
 
-    # get_exp_loss_acc(experiment_folder, -1, FCN=True, device=device)
+    get_exp_loss_acc(experiment_folder, -1, FCN=True, device=device)
 
     # get_grad(experiment_folder, -1, False, FCN=True)
 
