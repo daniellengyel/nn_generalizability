@@ -38,6 +38,8 @@ elif data_name == "mis_gauss":
     inp_dim = 2
     out_dim = 2
 
+config["data_name"] = data_name
+
 # net
 config["net_name"] = "SimpleNet"
 

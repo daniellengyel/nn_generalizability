@@ -15,9 +15,12 @@ import torch
 
 import pickle
 
-def get_data_from_experiment(experiment_folder, seed=None):
-    cfs = load_configs(experiment_folder)
-    data_name = cfs.iloc[0]["data_type"]
+def get_data_from_experiment(experiment_path, seed=None):
+    cfs = load_configs(experiment_path)
+    if "data_name" in cfs.iloc[0]:
+        data_name = cfs.iloc[0]["data_name"]
+    else:
+        data_name = experiment_path.split("/")[-2]
     vectorized = cfs.iloc[0]["net_name"] == "SimpleNet"
     reduce_train_per = cfs.iloc[0]["reduce_train_per"]
     seed = cfs.iloc[0]["seed"]
@@ -220,7 +223,7 @@ def main(experiment_name):
 
     root_folder = os.environ["PATH_TO_GEN_FOLDER"]
     data_name = "CIFAR10"
-    exp = "Jul13_16-26-18_Daniels-MacBook-Pro-4.local"
+    exp = "SimpleNet_two_bs"
     experiment_folder = os.path.join(root_folder, "experiments", data_name, exp)
 
     # init torch
@@ -235,7 +238,9 @@ def main(experiment_name):
     get_runs(experiment_folder, ["Loss", "Kish", "Potential", "Accuracy", "WeightVarTrace", "Norm",
                              "Trace"])  # TODO does not find acc and var
 
-    #
+    
+    get_exp_point_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
+
     # get_exp_final_distances(experiment_folder, device=device)
 
     # get_exp_eig(experiment_folder, -1, num_eigenthings=5, FCN=True, device=device)
