@@ -230,7 +230,7 @@ def get_exp_point_eig_density_traces(experiment_folder, step, seed, device=None,
     # iterate through models
     for exp_name, curr_path in exp_models_path_generator(experiment_folder):
 
-        models_dict = get_models(curr_path, step)
+        models_dict = get_models(curr_path, step, device=device)
         traces_dict[exp_name] = get_point_eig_density_traces(models_dict, data, device=device)
 
         # cache data
@@ -239,7 +239,30 @@ def get_exp_point_eig_density_traces(experiment_folder, step, seed, device=None,
 
     return traces_dict
 
+def get_exp_point_eig_density(experiment_folder, step, seed, device=None, num_datapoints=1000, on_test_set=False, should_cache=False):
+    eig_density_dict = {}
+    meta_dict = {"seed": seed}
 
+    # get data
+    train_data, test_data = get_data_from_experiment(experiment_folder)
+    if on_test_set:
+        data = get_random_data_subset(test_data, num_datapoints=num_datapoints, seed=seed)
+    else:
+        data = get_random_data_subset(train_data, num_datapoints=num_datapoints, seed=seed)
+
+
+    set_seed(seed)
+    # iterate through models
+    for exp_name, curr_path in exp_models_path_generator(experiment_folder):
+
+        models_dict = get_models(curr_path, step, device=device)
+        eig_density_dict[exp_name] = get_point_eig_density(models_dict, data, device=device)
+
+        # cache data
+        if should_cache:
+            cache_data(experiment_folder, "point_eig_density", eig_density_dict, meta_dict)
+
+    return eig_density_dict
 
 def main(experiment_name):
     # # # save analysis processsing
@@ -264,8 +287,11 @@ def main(experiment_name):
     
     # get_exp_point_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
 
-    get_exp_point_eig_density_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
+    a = time.time()
 
+    get_exp_point_eig_density(experiment_folder, -1, 0, device, num_datapoints=5, on_test_set=False,)
+
+    print(time.time() - a)
 
     # get_exp_final_distances(experiment_folder, device=device)
 

@@ -65,6 +65,28 @@ def get_point_eig_density_traces(models, data, device=None):
         traces[k] = curr_traces
     return traces
 
+def get_point_eig_density(models, data, device=None):
+    criterion = torch.nn.CrossEntropyLoss()
+    eig_density = {}
+    if device is not None:
+        is_gpu = True
+    else:
+        is_gpu = False
+
+    for k, m in models.items():
+        curr_eig_density = []
+        for i in range(len(data[0])):
+            inputs, labels = data[0][i], data[1][i]
+            inputs, labels = inputs.view(1, *inputs.shape), labels.view(1, *labels.shape)
+
+            if device is not None:
+                inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
+                    torch.cuda.LongTensor)
+
+            curr_eig_density.append(hessian(m, criterion, data=(inputs, labels), cuda=is_gpu).density(iter=10, n_v=1))
+        eig_density[k] = curr_eig_density
+    return eig_density
+
 # get eigenvalues of specific model folder.
 def get_models_eig(models, train_loader, test_loader, loss, num_eigenthings=5, full_dataset=True, device=None, only_vals=True):
     eig_dict = {}
