@@ -50,9 +50,9 @@ def get_models(model_folder_path, step, device=None):
 def get_all_models(experiment_folder, step):
     models_dict = {}
     # iterate through models
-    for curr_path in exp_models_path_generator(experiment_folder):
+    for exp_name, curr_path in exp_models_path_generator(experiment_folder):
         try:
-            models_dict[curr_dir] = get_models(curr_path, step)
+            models_dict[exp_name] = get_models(curr_path, step)
         except:
             continue
     return models_dict
@@ -135,7 +135,9 @@ def save_models(models, model_name, model_params, experiment_root, curr_exp_name
                     , os.path.join(models_path, "model_{}.pt".format(idx_model)))
 
 def load_model(PATH, device=None):
-    meta_data = torch.load(PATH)
+    if device is None:
+        device = torch.device('cpu')
+    meta_data = torch.load(PATH, map_location=device)
     model = get_nets(meta_data["model_name"], meta_data["model_params"], num_nets=1, device=device)[0]
     model.load_state_dict(meta_data['model_state_dict'])
     return model

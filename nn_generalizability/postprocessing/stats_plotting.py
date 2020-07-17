@@ -3,6 +3,7 @@ import pandas as pd
 import pickle, os
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib as mpl
 from cycler import cycler
 import torch
 from torch.utils.data import DataLoader
@@ -119,6 +120,13 @@ def get_end_stats(exp_dict):
             stats_dict[str(exp_id)]["Dist Mean"] = np.mean(dist[exp_id])
             stats_dict[str(exp_id)]["Dist Max"] = np.max(dist[exp_id])
             stats_dict[str(exp_id)]["Dist Min"] = np.min(dist[exp_id])
+        else:
+            print("YO")
+            norm_list = np.array([runs[exp_id][num_steps]["Norm"]["net"][str(nn)] for nn in range(num_nets)])
+
+            stats_dict[str(exp_id)]["Norm Mean"] = np.mean(norm_list)
+            stats_dict[str(exp_id)]["Norm Max"] = np.max(norm_list)
+            stats_dict[str(exp_id)]["Norm Min"] = np.min(norm_list)
 
         if trace is not None:
 
@@ -157,29 +165,48 @@ def get_end_stats(exp_dict):
     return stats_pd
 
 
-def _plot(plots, plots_names, X_axis_name, Y_axis_name, X_axis_bounds, Y_axis_bounds, X_axis_display_name=None, Y_axis_display_name=None, save_location=None):
+def _plot(plots, plots_names, X_axis_name, Y_axis_name, X_axis_bounds, Y_axis_bounds, save_location=None):
+    print(len(plots_names))
     if len(plots_names) > 1:
         plt.legend(tuple(plots),
                    plots_names,
                    scatterpoints=1,
                    loc='best',
                    ncol=3,
-                   fontsize=8)
+                   )
+    elif len(plots) > 1:
+        plt.legend(loc='upper right')
 
-    if X_axis_display_name is None:
-        X_axis_display_name = X_axis_name
-    if Y_axis_display_name is None:
-        Y_axis_display_name = Y_axis_name
+    config = {"axes.titlesize" : 24,
+                "axes.labelsize" : 22,
+                "lines.linewidth" : 3,
+                "lines.markersize" : 10,
+                "xtick.labelsize" : 18,
+                "ytick.labelsize" : 18,
+                'grid.linestyle': 'dashed',
+                'legend.fontsize': 22,
+            }
+    plt.grid(True)
 
-    plt.xlabel(X_axis_display_name)
-    plt.ylabel(Y_axis_display_name)
+    plt.rcParams.update(config) 
+
+    plt.rcParams['font.family'] = 'sans-serif'
+    plt.rcParams["figure.figsize"] = (13,9)
+
+
+    plt.xlabel(X_axis_name, )
+    plt.ylabel(Y_axis_name, )
 
     if X_axis_bounds is not None:
         plt.xlim(X_axis_bounds)
     if Y_axis_bounds is not None:
         plt.ylim(Y_axis_bounds)
 
-    color = plt.cm.tab20(np.arange(12))
+    color_selector = np.arange(12)
+    color_selector[0] = 3
+    color_selector[1] = 1
+    color_selector[3] = 0
+    color = plt.cm.tab20(color_selector)
     mpl.rcParams['axes.prop_cycle'] = cycler('color', color) # plt.cm.Set3(np.arange(12))))
     if save_location is not None:
         plt.savefig(save_location + ".png")#, format='eps')
@@ -214,7 +241,7 @@ def id_selection_from_hyperparameters_generator(cfs, filter_seperate, filter_not
 
             yield exp_ids, comb
         
-        yield None, None
+        yield None, s_comb
 
 
 def plot_stats(stats_pd, X_axis_name, Y_axis_name, Z_axis_name=None, filter_seperate=None, filter_not_seperate=None, save_exp_path=None, X_axis_bounds=None,
@@ -418,5 +445,64 @@ def plot_special(exp_dict, X_axis_name, Y_axis_name, filter_seperate=None, filte
                 plots.append(plt.scatter(x_vals, y_vals))
                 plots_names.append(comb)
     
+def hp_plot(experiment_folder, X_data, Y_data, X_axis_name, Y_axis_name, filter_seperate=None, filter_not_seperate=None,
+                 save_exp_path=None, X_axis_bounds=None, Y_axis_bounds=None, pre_filtered_exp_ids=None, plot_type="scatter"):
+    plots = []
+    plots_names = []
 
+    cfs = load_configs(experiment_folder)
 
+    for exp_ids, comb in id_selection_from_hyperparameters_generator(cfs, filter_seperate, filter_not_seperate):
+        if (exp_ids is None):
+            if save_exp_path is not None:
+                save_location = os.path.join(save_exp_path, "{}_{}_{}".format(X_axis_name, Y_axis_name.replace("/", "-"), str(comb)))
+            else:
+                save_location = None
+
+            _plot(plots, plots_names, X_axis_name, Y_axis_name, X_axis_bounds, Y_axis_bounds,
+                    save_location=save_location)
+
+            plots = []
+            plots_names = []
+        else:
+            if pre_filtered_exp_ids is not None:
+                exp_ids = list(set(exp_ids) & set(pre_filtered_exp_ids))
+
+            if len(exp_ids) == 0:
+                continue
+            x = np.concatenate(np.array([[v for v in X_data[exp_id].values()] for exp_id in exp_ids]), axis=0)
+            y = np.concatenate(np.array([[v for v in Y_data[exp_id].values()] for exp_id in exp_ids]), axis=0)
+
+            if plot_type == "scatter":
+                plots.append(plt.scatter(x.T, y.T))
+            else: 
+                plots.append(plt.plot(x.T, y.T)[0])
+            plots_names.append(comb)
+
+def hp_xy_func_plot(experiment_folder, xy_func, X_axis_name, Y_axis_name, plot_name, filter_seperate=None, filter_not_seperate=None,
+                 save_exp_path=None, X_axis_bounds=None, Y_axis_bounds=None, pre_filtered_exp_ids=None, plot_type="scatter"):
+    plots = []
+    plots_names = []
+
+    cfs = load_configs(experiment_folder)
+
+    for exp_ids, comb in id_selection_from_hyperparameters_generator(cfs, filter_seperate, filter_not_seperate):
+        if (exp_ids is None):
+            if save_exp_path is not None:
+                save_location = os.path.join(save_exp_path, "{}_{}_{}_{}".format(plot_name, X_axis_name, Y_axis_name.replace("/", "-"), str(comb)))
+            else:
+                save_location = None
+
+            _plot(plots, plots_names, X_axis_name, Y_axis_name, X_axis_bounds, Y_axis_bounds,
+                    save_location=save_location)
+
+            plots = []
+            plots_names = []
+        else:
+            if pre_filtered_exp_ids is not None:
+                exp_ids = list(set(exp_ids) & set(pre_filtered_exp_ids))
+
+            if len(exp_ids) == 0:
+                continue
+
+            plots, plots_names = xy_func(exp_ids, plots, plots_names, comb)

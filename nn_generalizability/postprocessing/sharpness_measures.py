@@ -38,10 +38,32 @@ def get_point_traces(models, data, device=None):
                 inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
                     torch.cuda.LongTensor)
 
-            curr_traces.append(np.mean(hessian(m, criterion, data=(inputs, labels), cuda=is_gpu).trace()))
+            curr_traces.append(np.mean(hessian(m, criterion, data=(inputs, labels), cuda=is_gpu).trace(maxIter=1000)))
         traces[k] = curr_traces
     return traces
 
+def get_point_eig_density_traces(models, data, device=None):
+    criterion = torch.nn.CrossEntropyLoss()
+    traces = {}
+    if device is not None:
+        is_gpu = True
+    else:
+        is_gpu = False
+
+    for k, m in models.items():
+        curr_traces = []
+        for i in range(len(data[0])):
+            inputs, labels = data[0][i], data[1][i]
+            inputs, labels = inputs.view(1, *inputs.shape), labels.view(1, *labels.shape)
+
+            if device is not None:
+                inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
+                    torch.cuda.LongTensor)
+
+            eigs, density = hessian(m, criterion, data=(inputs, labels), cuda=is_gpu).density(iter=100, n_v=1)
+            curr_traces.append(np.array(eigs[0]).dot(np.array(density[0])))
+        traces[k] = curr_traces
+    return traces
 
 # get eigenvalues of specific model folder.
 def get_models_eig(models, train_loader, test_loader, loss, num_eigenthings=5, full_dataset=True, device=None, only_vals=True):

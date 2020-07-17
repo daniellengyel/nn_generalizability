@@ -84,6 +84,10 @@ def get_grad_params_vec(net):
     param_vec = torch.cat([p.grad.view(-1) for p in net.parameters()])
     return param_vec
 
+def zero_model_gradients(model):
+    for p in model.parameters():
+        p.grad.data.zero_()
+
 
 def vec_to_net(vec, net):
     new_net = copy.deepcopy(net)
@@ -94,7 +98,7 @@ def vec_to_net(vec, net):
     for name1, param1 in net.named_parameters():
         end_point = start_point + param1.numel()
         dict_new_net[name1].data.copy_(vec[start_point:end_point].reshape(param1.shape))
-
+        dict_new_net[name1].data.requires_grad = True
         start_point = end_point
 
     return new_net
@@ -131,7 +135,11 @@ def get_params_cov(nets):
 def get_correlation(X, Y):
     return (X - np.mean(X)).dot(Y - np.mean(Y)) / np.sqrt(np.var(X) * np.var(Y)) * 1 / float(len(Y))
 
-
+def take_slice(a, idxs):
+    to_ret = []
+    for i, r in enumerate(a):
+        to_ret.append(r[idxs[i]])
+    return to_ret
 
 
 # Viz
@@ -259,6 +267,24 @@ def get_net_loss(net, data_loader, full_dataset=False, device=None):
 
     return loss_sum / (idx + 1)
 
+
+def get_model_outputs(net, data, softmax_outputs=False, device=None):
+
+    inputs, labels = data
+    
+    if device is not None:
+        inputs, labels = inputs.to(device).type(torch.cuda.FloatTensor), labels.to(device).type(
+            torch.cuda.LongTensor)
+    else:
+        inputs = inputs.float()
+
+    outputs = net(inputs)
+    
+    if softmax_outputs:
+        m = torch.nn.Softmax(dim=-1)
+        outputs = m(outputs)
+        
+    return outputs
 
 
 def same_model(model1, model2):

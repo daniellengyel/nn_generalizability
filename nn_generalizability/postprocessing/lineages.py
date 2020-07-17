@@ -36,15 +36,11 @@ def find_lineages(res_ids, starting_lineage=None, starting_assignments=None):
 
 def get_linages_vals(lineages, val_arr):
     arr_lineages = np.array(list(lineages.values())).T
-    lin_vals = np.array(_take_slice(val_arr, arr_lineages)).T
+    lin_vals = np.array(take_slice(val_arr, arr_lineages)).T
     return {k: lin_vals[i] for i, k in enumerate(lineages.keys())}
 
 
-def _take_slice(a, idxs):
-    to_ret = []
-    for i, r in enumerate(a):
-        to_ret.append(r[idxs[i]])
-    return to_ret
+
 
 
 

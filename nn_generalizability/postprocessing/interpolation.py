@@ -1,7 +1,7 @@
 import numpy as np
-from utils import *
-from data_getters import *
-from postprocessing import *
+from nn_generalizability.utils import *
+from nn_generalizability.data_getters import *
+from nn_generalizability.postprocessing.postprocessing import *
 
 import copy
 import torch

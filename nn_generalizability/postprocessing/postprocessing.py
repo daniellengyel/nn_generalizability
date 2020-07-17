@@ -189,7 +189,7 @@ def get_exp_trace(experiment_folder, step, seed=0, FCN=False, device=None):
 
     return trace_dict
 
-def get_exp_point_traces(experiment_folder, step, seed, device, num_datapoints=1000, on_test_set=False,):
+def get_exp_point_traces(experiment_folder, step, seed, device=None, num_datapoints=1000, on_test_set=False, should_cache=False):
     traces_dict = {}
     meta_dict = {"seed": seed}
 
@@ -206,13 +206,38 @@ def get_exp_point_traces(experiment_folder, step, seed, device, num_datapoints=1
     for exp_name, curr_path in exp_models_path_generator(experiment_folder):
 
         models_dict = get_models(curr_path, step)
-        traces_dict[exp_name] = get_point_traces(models_dict, data, device=None)
+        traces_dict[exp_name] = get_point_traces(models_dict, data, device=device)
 
         # cache data
-        cache_data(experiment_folder, "point_traces", traces_dict, meta_dict)
+        if should_cache:
+            cache_data(experiment_folder, "point_traces", traces_dict, meta_dict)
 
     return traces_dict
 
+def get_exp_point_eig_density_traces(experiment_folder, step, seed, device=None, num_datapoints=1000, on_test_set=False, should_cache=False):
+    traces_dict = {}
+    meta_dict = {"seed": seed}
+
+    # get data
+    train_data, test_data = get_data_from_experiment(experiment_folder)
+    if on_test_set:
+        data = get_random_data_subset(test_data, num_datapoints=num_datapoints, seed=seed)
+    else:
+        data = get_random_data_subset(train_data, num_datapoints=num_datapoints, seed=seed)
+
+
+    set_seed(seed)
+    # iterate through models
+    for exp_name, curr_path in exp_models_path_generator(experiment_folder):
+
+        models_dict = get_models(curr_path, step)
+        traces_dict[exp_name] = get_point_eig_density_traces(models_dict, data, device=device)
+
+        # cache data
+        if should_cache:
+            cache_data(experiment_folder, "point_eig_density_traces", traces_dict, meta_dict)
+
+    return traces_dict
 
 
 
@@ -221,7 +246,7 @@ def main(experiment_name):
 
     root_folder = os.environ["PATH_TO_GEN_FOLDER"]
     data_name = "CIFAR10"
-    exp = "Jul14_13-44-18_cloud-vm-40-190.doc.ic.ac.uk"
+    exp = "SimpleNet_high_steps"
     experiment_folder = os.path.join(root_folder, "experiments", data_name, exp)
 
     # init torch
@@ -233,18 +258,21 @@ def main(experiment_name):
         device = None
         # device = torch.device("cpu")
 
-    get_runs(experiment_folder, ["Loss", "Kish", "Potential", "Accuracy", "WeightVarTrace", "Norm",
-                             "Trace"])  # TODO does not find acc and var
+    # get_runs(experiment_folder, ["Loss", "Kish", "Potential", "Accuracy", "WeightVarTrace", "Norm",
+    #                          "Trace"])  # TODO does not find acc and var
 
     
-    get_exp_point_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
+    # get_exp_point_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
+
+    get_exp_point_eig_density_traces(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False,)
+
 
     # get_exp_final_distances(experiment_folder, device=device)
 
     # get_exp_eig(experiment_folder, -1, num_eigenthings=5, FCN=True, device=device)
-    get_exp_trace(experiment_folder, -1, FCN=True, device=device)
+    # get_exp_trace(experiment_folder, -1, FCN=True, device=device)
 
-    get_exp_loss_acc(experiment_folder, -1, FCN=True, device=device)
+    # get_exp_loss_acc(experiment_folder, -1, FCN=True, device=device)
 
     # get_grad(experiment_folder, -1, False, FCN=True)
 
