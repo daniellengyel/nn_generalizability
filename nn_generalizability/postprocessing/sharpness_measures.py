@@ -65,6 +65,19 @@ def get_point_eig_density_traces(models, data, device=None):
         traces[k] = curr_traces
     return traces
 
+def compute_trace_from_eig_density(exp_eig_density_dict):
+    traces = {}
+    for exp_id in exp_eig_density_dict:
+        traces[exp_id] = {}
+        for model_idx in exp_eig_density_dict[exp_id]:
+            traces[exp_id][model_idx] = []
+            for point_eig_density in exp_eig_density_dict[exp_id][model_idx]:
+                eigs, density = point_eig_density
+                point_trace = np.array(eigs[0]).dot(np.array(density[0]))
+                traces[exp_id][model_idx].append(point_trace)
+            traces[exp_id][model_idx] = np.array(traces[exp_id][model_idx])
+    return traces
+
 def get_point_eig_density(models, data, device=None):
     criterion = torch.nn.CrossEntropyLoss()
     eig_density = {}

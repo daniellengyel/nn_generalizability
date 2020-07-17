@@ -8,6 +8,7 @@ from ..data_getters import *
 
 from .sharpness_measures import *
 from .model_related import * 
+from .margins import *
 
 import yaml, os, sys, re
 
@@ -189,6 +190,31 @@ def get_exp_trace(experiment_folder, step, seed=0, FCN=False, device=None):
 
     return trace_dict
 
+def get_exp_margins(experiment_folder, softmax_outputs=False, step=-1, seed=0, device=None, num_datapoints=50, on_test_set=False, should_cache=False):
+    margins_dict = {}
+    meta_dict = {"seed": seed}
+
+    # get data
+    train_data, test_data = get_data_from_experiment(experiment_folder)
+    if on_test_set:
+        data = get_random_data_subset(test_data, num_datapoints=num_datapoints, seed=seed)
+    else:
+        data = get_random_data_subset(train_data, num_datapoints=num_datapoints, seed=seed)
+
+
+    set_seed(seed)
+    # iterate through models
+    for exp_name, curr_path in exp_models_path_generator(experiment_folder):
+
+        models_dict = get_models(curr_path, step)
+        margins_dict[exp_name] = get_margins_to_correct(models_dict, data, device=device, softmax_outputs=softmax_outputs)
+
+        # cache data
+        if should_cache:
+            cache_data(experiment_folder, "margins", margins_dict, meta_dict)
+
+    return margins_dict
+
 def get_exp_point_traces(experiment_folder, step, seed, device=None, num_datapoints=1000, on_test_set=False, should_cache=False):
     traces_dict = {}
     meta_dict = {"seed": seed}
@@ -289,7 +315,7 @@ def main(experiment_name):
 
     a = time.time()
 
-    get_exp_point_eig_density(experiment_folder, -1, 0, device, num_datapoints=5, on_test_set=False,)
+    get_exp_point_eig_density(experiment_folder, -1, 0, device, num_datapoints=1000, on_test_set=False, should_cache=True)
 
     print(time.time() - a)
 

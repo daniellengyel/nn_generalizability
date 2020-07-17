@@ -65,7 +65,7 @@ def cache_data(experiment_folder, name, data, meta_dict=None):
         pickle.dump(data, f)
 
     if meta_dict is not None:
-        with open(os.path.join(cache_folder, "meta.yml"), "wb") as f:
+        with open(os.path.join(cache_folder, "meta.yml"), "w") as f:
             yaml.dump(meta_dict, f)
 
 # def load_cached_data(experiment_folder):
